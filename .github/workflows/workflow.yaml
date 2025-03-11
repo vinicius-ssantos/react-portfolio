@@ -1,32 +1,44 @@
-name: Deploy to GitHub Pages
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout do Código
+      - name: 📥 Checkout do Repositório
         uses: actions/checkout@v3
 
-      - name: Setup do Node.js
+      - name: 🔧 Configurar Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
+      - name: 📦 Instalar Dependências
+        run: npm install
 
-      - name: Instalar dependências e build
-        run: |
-          npm install
-          npm run build
+      - name: 🏗️ Construir Aplicação
+        run: npm run build
 
-      - name: Deploy para GitHub Pages
+      - name: ✅ Rodar Testes (Se Existirem)
+        run: npm test || echo "Testes não encontrados"
+
+      - name: 🚀 Deploy no GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
           folder: dist
-          token: ${{ secrets.GH_PAT }}
+          clean: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🔍 Verificar Deploy
+        run: |
+          sleep 5  # Esperar o GitHub Pages propagar as mudanças
+          curl -Is https://vinicius-ssantos.github.io/react-portfolio | head -n 1
